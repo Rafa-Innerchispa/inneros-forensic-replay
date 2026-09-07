@@ -32,11 +32,39 @@ Each run is keyed by `correlation_id` and should preserve:
 - SHA-256 hashes for every persisted artifact
 - Git commit / build identity when available
 
+The implementation in this repository stores evidence as a content-addressed
+bundle:
+
+```text
+bundle/
+  manifest.json
+  artifacts/
+    sha256/
+      ab/
+        abcd...json
+```
+
+`manifest.json` contains the schema version, run identity, capture metadata and
+one entry per artifact. Every artifact is addressed by its SHA-256 digest and is
+verified before replay. Missing or mutated evidence fails closed.
+
 ## Architecture direction
 
 Phase 1 keeps the implementation deliberately small:
 
 `Raw Capture -> Content-Addressed Evidence Bundle -> Manifest -> Replay API`
+
+Core APIs:
+
+- `EvidenceBundleWriter.capture_raw(...)` persists raw bytes and records the
+  digest in the manifest.
+- `EvidenceBundleWriter.capture_json(...)` persists canonical JSON bytes so
+  repeated captures are stable.
+- `EvidenceBundleReader.verify()` checks the manifest and all artifact hashes.
+- `AuditReplayer.load()` returns preserved evidence only; it never contacts
+  live systems.
+- `DeterministicReplayer.run_transform(...)` verifies evidence and runs a local
+  deterministic transform with outbound network calls blocked.
 
 Planned integrations are additive rather than mandatory:
 
@@ -60,6 +88,19 @@ Planned integrations are additive rather than mandatory:
 ## First target
 
 The first adapter will be **InnerOS Alpha / Alpaca** so a historical recommendation can be audited against the exact market snapshot, option-chain evidence, portfolio state, model output, and risk policy that produced it.
+
+See `docs/alpaca_adapter_contract.md` for the capture contract. The replay core
+does not import Alpaca clients or credentials; adapters must capture raw payloads
+before normalization and pass bytes/JSON into the bundle writer.
+
+## Development
+
+```bash
+python -m unittest discover -s tests
+```
+
+The test suite covers SHA verification, missing-evidence fail-closed behavior
+and replay execution with network disabled.
 
 ## Status
 
