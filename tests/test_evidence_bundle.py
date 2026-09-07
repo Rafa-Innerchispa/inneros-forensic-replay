@@ -1,4 +1,5 @@
 import json
+import importlib.util
 import socket
 import sys
 import unittest
@@ -187,6 +188,25 @@ class EvidenceBundleTests(unittest.TestCase):
                 [{"close": 201.1, "symbol": "AAPL"}, {"close": 411.0, "symbol": "MSFT"}],
             )
             self.assertEqual(record.metadata["token"], "<redacted>")
+
+    @unittest.skipIf(importlib.util.find_spec("pyarrow") is None, "pyarrow optional dependency not installed")
+    def test_tabular_dataset_parquet_roundtrip_when_pyarrow_available(self) -> None:
+        with self._tmpdir() as tmp_path:
+            writer = EvidenceBundleWriter(tmp_path, correlation_id="bars-parquet")
+            record = capture_tabular_dataset(
+                writer,
+                "alpaca.bars.dataset",
+                [{"symbol": "AMD", "close": 165.0}],
+                source="alpaca.bars",
+            )
+            writer.write_manifest()
+
+            self.assertEqual(record.media_type, "application/x-parquet")
+            self.assertEqual(record.metadata["storage_status"], "parquet")
+            self.assertEqual(
+                load_tabular_dataset(EvidenceBundleReader(tmp_path), "alpaca.bars.dataset"),
+                [{"close": 165.0, "symbol": "AMD"}],
+            )
 
     def test_counterfactual_replay_preserves_original_and_blocks_network(self) -> None:
         with self._tmpdir() as tmp_path:
