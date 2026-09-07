@@ -9,6 +9,9 @@ description = "Content-addressed forensic evidence bundles and side-effect-free 
 requires-python = ">=3.11"
 readme = "README.md"
 
+[project.optional-dependencies]
+datasets = ["pyarrow>=16", "duckdb>=1"]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

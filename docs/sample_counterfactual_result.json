@@ -1,0 +1,25 @@
+{
+  "correlation_id": "counterfactual-run",
+  "counterfactual": {
+    "model": "new-model",
+    "policy_version": "risk-v2"
+  },
+  "counterfactual_output": {
+    "decision": "buy",
+    "policy_version": "risk-v2"
+  },
+  "network_disabled": true,
+  "original_output": {
+    "confidence": 0.62,
+    "decision": "hold"
+  },
+  "original_policy": {
+    "policy_version": "risk-v1"
+  },
+  "original_run": {
+    "build": "abc123",
+    "model": "original-model",
+    "prompt_version": "p1"
+  },
+  "side_effect_free": true
+}

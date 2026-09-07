@@ -9,11 +9,13 @@ from .bundle import (
     MissingEvidenceError,
     ReplayNetworkBlocked,
 )
-from .replay import AuditReplayer, DeterministicReplayer
+from .datasets import capture_tabular_dataset, load_tabular_dataset, optional_dataset_backends
+from .replay import AuditReplayer, CounterfactualReplayer, DeterministicReplayer
 
 __all__ = [
     "ArtifactRecord",
     "AuditReplayer",
+    "CounterfactualReplayer",
     "DeterministicReplayer",
     "EvidenceBundleReader",
     "EvidenceBundleWriter",
@@ -21,4 +23,7 @@ __all__ = [
     "EvidenceManifest",
     "MissingEvidenceError",
     "ReplayNetworkBlocked",
+    "capture_tabular_dataset",
+    "load_tabular_dataset",
+    "optional_dataset_backends",
 ]

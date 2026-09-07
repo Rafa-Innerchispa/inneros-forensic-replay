@@ -1,0 +1,11 @@
+{
+  "logical_name": "alpaca.bars.dataset",
+  "media_type": "application/x-ndjson",
+  "metadata": {
+    "dataset_rows": 2,
+    "duckdb_available": false,
+    "parquet_available": false,
+    "storage_status": "fallback_jsonl"
+  },
+  "truth_boundary": "This runtime did not have pyarrow/duckdb installed during validation, so the SDK stored a truthful JSONL fallback instead of pretending Parquet/DuckDB evidence existed."
+}

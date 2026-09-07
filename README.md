@@ -60,11 +60,15 @@ Core APIs:
   digest in the manifest.
 - `EvidenceBundleWriter.capture_json(...)` persists canonical JSON bytes so
   repeated captures are stable.
+- `capture_tabular_dataset(...)` stores large row-oriented evidence as Parquet
+  when `pyarrow` is available, otherwise as truthful JSONL fallback.
 - `EvidenceBundleReader.verify()` checks the manifest and all artifact hashes.
 - `AuditReplayer.load()` returns preserved evidence only; it never contacts
   live systems.
 - `DeterministicReplayer.run_transform(...)` verifies evidence and runs a local
   deterministic transform with outbound network calls blocked.
+- `CounterfactualReplayer.compare(...)` evaluates a new model/policy descriptor
+  against the same historical evidence and preserves the original output.
 
 Planned integrations are additive rather than mandatory:
 
@@ -92,6 +96,24 @@ The first adapter will be **InnerOS Alpha / Alpaca** so a historical recommendat
 See `docs/alpaca_adapter_contract.md` for the capture contract. The replay core
 does not import Alpaca clients or credentials; adapters must capture raw payloads
 before normalization and pass bytes/JSON into the bundle writer.
+
+## v2 additions
+
+Forensic Replay v2 adds:
+
+- recursive secret redaction before evidence persistence
+- `manifest.sha256` verification
+- Alpaca raw capture for latest trade, bars, option chain, option contracts,
+  option snapshots and portfolio
+- optional Parquet/DuckDB-aware dataset helpers with JSONL fallback that is
+  explicitly labeled as fallback
+- side-effect-free counterfactual replay that never overwrites original output
+
+InnerOS Alpha should integrate this SDK through hooks at the market-data capture
+boundary: immediately after a read-only Alpaca response returns and before any
+normalization, scoring, recommendation, or order logic. This repository does not
+perform broker writes, cloud calls, order placement, or live data refresh during
+replay.
 
 ## Development
 

@@ -53,6 +53,43 @@ class DeterministicReplayer:
             return transform(evidence, manifest)
 
 
+class CounterfactualReplayer:
+    """Evaluates new policy/model descriptors against the original evidence."""
+
+    def __init__(self, reader: EvidenceBundleReader):
+        self.reader = reader
+
+    def compare(
+        self,
+        evaluator: Callable[[dict[str, Any], EvidenceManifest, dict[str, Any]], Any],
+        *,
+        required_artifacts: list[str],
+        counterfactual: dict[str, Any],
+        original_output_artifact: str = "llm.output.original",
+    ) -> dict[str, Any]:
+        manifest = self.reader.verify()
+        required_names = list(dict.fromkeys([*required_artifacts, original_output_artifact]))
+        required = self.reader.require(required_names)
+        evidence = {
+            name: self.reader.artifact_json(record)
+            if record.media_type == "application/json"
+            else self.reader.artifact_bytes(record)
+            for name, record in required.items()
+        }
+        with network_disabled():
+            candidate = evaluator(evidence, manifest, dict(counterfactual))
+        return {
+            "correlation_id": manifest.correlation_id,
+            "original_output": evidence[original_output_artifact],
+            "counterfactual_output": candidate,
+            "counterfactual": dict(counterfactual),
+            "original_run": manifest.run,
+            "original_policy": manifest.policy,
+            "side_effect_free": True,
+            "network_disabled": True,
+        }
+
+
 @contextmanager
 def network_disabled():
     original_create_connection = socket.create_connection

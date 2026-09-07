@@ -24,6 +24,18 @@ class ReplayNetworkBlocked(EvidenceError):
     """Raised when replay code tries to reach the network."""
 
 
+SECRET_FIELD_HINTS = (
+    "api_key",
+    "apikey",
+    "authorization",
+    "bearer",
+    "client_secret",
+    "password",
+    "secret",
+    "token",
+)
+
+
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
@@ -34,6 +46,23 @@ def canonical_json_bytes(value: Any) -> bytes:
 
 def sha256_bytes(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
+
+
+def sanitize_for_evidence(value: Any) -> Any:
+    if isinstance(value, dict):
+        clean: dict[str, Any] = {}
+        for key, item in value.items():
+            key_s = str(key)
+            if any(hint in key_s.lower() for hint in SECRET_FIELD_HINTS):
+                clean[key_s] = "<redacted>"
+            else:
+                clean[key_s] = sanitize_for_evidence(item)
+        return clean
+    if isinstance(value, list):
+        return [sanitize_for_evidence(item) for item in value]
+    if isinstance(value, tuple):
+        return [sanitize_for_evidence(item) for item in value]
+    return value
 
 
 @dataclass(frozen=True)
@@ -183,6 +212,10 @@ class EvidenceBundleWriter:
         )
         self.bundle_dir.mkdir(parents=True, exist_ok=True)
         (self.bundle_dir / "manifest.json").write_bytes(canonical_json_bytes(manifest.to_dict()))
+        (self.bundle_dir / "manifest.sha256").write_text(
+            sha256_bytes(canonical_json_bytes(manifest.to_dict())) + "\n",
+            encoding="utf-8",
+        )
         return manifest
 
     @staticmethod
@@ -235,6 +268,12 @@ class EvidenceBundleReader:
         manifest = self.load_manifest()
         for artifact in manifest.artifacts:
             self.artifact_bytes(artifact)
+        manifest_hash_path = self.bundle_dir / "manifest.sha256"
+        if manifest_hash_path.exists():
+            expected = manifest_hash_path.read_text(encoding="utf-8").strip()
+            observed = sha256_bytes(canonical_json_bytes(manifest.to_dict()))
+            if expected != observed:
+                raise EvidenceError(f"manifest hash mismatch: expected {expected}, got {observed}")
         return manifest
 
     def _artifact_path(self, artifact: ArtifactRecord) -> Path:
