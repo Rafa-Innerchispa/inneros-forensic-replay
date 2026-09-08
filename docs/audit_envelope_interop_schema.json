@@ -1,0 +1,334 @@
+{
+  "$defs": {
+    "decision_evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "action_refs": {
+          "items": {
+            "$ref": "#/$defs/source_ref"
+          },
+          "type": "array"
+        },
+        "decision_id": {
+          "type": "string"
+        },
+        "model_output_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/source_ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "model_ref": {
+          "type": "string"
+        },
+        "normalized_decision_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/source_ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "policy_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "summary": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "decision_id",
+        "model_ref",
+        "model_output_ref",
+        "normalized_decision_ref",
+        "policy_ref",
+        "action_refs",
+        "summary"
+      ],
+      "type": "object"
+    },
+    "htr_record": {
+      "additionalProperties": false,
+      "properties": {
+        "assisted_active_human_minutes": {
+          "type": "string"
+        },
+        "baseline_human_minutes": {
+          "type": "string"
+        },
+        "cloud_compute_seconds": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "estimate_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "external_cost_usd": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "handoffs": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "interventions": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "local_compute_seconds": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "measurement_mode": {
+          "enum": [
+            "MEASURED",
+            "ESTIMATED"
+          ]
+        },
+        "measurement_source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "quality_gate": {
+          "type": "object"
+        },
+        "quality_notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "returned_human_minutes": {
+          "type": "string"
+        },
+        "rework_human_minutes": {
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "inneros.htr_record.v1"
+        },
+        "task_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "task_id",
+        "measurement_mode",
+        "baseline_human_minutes",
+        "assisted_active_human_minutes",
+        "rework_human_minutes",
+        "returned_human_minutes",
+        "interventions",
+        "handoffs",
+        "local_compute_seconds",
+        "cloud_compute_seconds",
+        "external_cost_usd",
+        "measurement_source",
+        "estimate_reason",
+        "quality_notes",
+        "quality_gate"
+      ],
+      "type": "object"
+    },
+    "routing_evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "cloud_seconds": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cost_usd": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "local_seconds": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "metadata": {
+          "type": "object"
+        },
+        "queue_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "route_reason": {
+          "type": "string"
+        },
+        "selected_agent": {
+          "type": "string"
+        },
+        "selected_model": {
+          "type": "string"
+        },
+        "trace_refs": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "worker_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "selected_agent",
+        "selected_model",
+        "route_reason",
+        "queue_id",
+        "worker_id",
+        "local_seconds",
+        "cloud_seconds",
+        "cost_usd",
+        "trace_refs",
+        "metadata"
+      ],
+      "type": "object"
+    },
+    "source_ref": {
+      "additionalProperties": false,
+      "properties": {
+        "captured_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "logical_name": {
+          "type": "string"
+        },
+        "media_type": {
+          "type": "string"
+        },
+        "observed_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "relative_path": {
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "logical_name",
+        "sha256",
+        "relative_path",
+        "media_type",
+        "size_bytes",
+        "observed_at",
+        "captured_at",
+        "source"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://inneros.local/schemas/audit_envelope_interop.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "correlation_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "decision": {
+      "$ref": "#/$defs/decision_evidence"
+    },
+    "evidence_manifest_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "type": "string"
+    },
+    "evidence_refs": {
+      "items": {
+        "$ref": "#/$defs/source_ref"
+      },
+      "type": "array"
+    },
+    "htr": {
+      "$ref": "#/$defs/htr_record"
+    },
+    "manifest_schema_version": {
+      "const": "inneros.evidence_bundle.v1"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "replay_mode": {
+      "enum": [
+        "audit",
+        "deterministic",
+        "counterfactual"
+      ]
+    },
+    "routing": {
+      "$ref": "#/$defs/routing_evidence"
+    },
+    "schema_version": {
+      "const": "inneros.audit_envelope.v1"
+    }
+  },
+  "required": [
+    "schema_version",
+    "correlation_id",
+    "created_at",
+    "manifest_schema_version",
+    "evidence_manifest_sha256",
+    "evidence_refs",
+    "decision",
+    "routing",
+    "htr",
+    "replay_mode",
+    "metadata"
+  ],
+  "title": "InnerOS Audit Envelope Interop v1",
+  "type": "object"
+}

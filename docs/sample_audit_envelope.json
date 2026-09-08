@@ -1,0 +1,83 @@
+{
+  "correlation_id": "interop-sample-run",
+  "created_at": "2026-09-09T02:14:14.716275Z",
+  "decision": {
+    "action_refs": [],
+    "decision_id": "decision-sample",
+    "model_output_ref": null,
+    "model_ref": "local-gemma:27b",
+    "normalized_decision_ref": null,
+    "policy_ref": "policy-v1",
+    "summary": {
+      "result": "review"
+    }
+  },
+  "evidence_manifest_sha256": "b53a99852bde5d758941bc1d05846dc9c3520bd8f45aa0ea73315a054633cf11",
+  "evidence_refs": [
+    {
+      "captured_at": "2026-09-09T02:14:14.715758Z",
+      "logical_name": "model.output.raw",
+      "media_type": "application/json",
+      "observed_at": null,
+      "relative_path": "artifacts/sha256/b3/b37a884567d6259f5c02f65175839d139fbf9bc16ae9109ae90c53db2abf625a.json",
+      "sha256": "b37a884567d6259f5c02f65175839d139fbf9bc16ae9109ae90c53db2abf625a",
+      "size_bytes": 21,
+      "source": "local-model"
+    },
+    {
+      "captured_at": "2026-09-09T02:14:14.715936Z",
+      "logical_name": "decision.normalized",
+      "media_type": "application/json",
+      "observed_at": null,
+      "relative_path": "artifacts/sha256/67/67deaefadfcc30e75b616ad465741ef44ffb5bee104dad60276fc2aab79ef099.json",
+      "sha256": "67deaefadfcc30e75b616ad465741ef44ffb5bee104dad60276fc2aab79ef099",
+      "size_bytes": 39,
+      "source": "policy"
+    }
+  ],
+  "htr": {
+    "assisted_active_human_minutes": "7",
+    "baseline_human_minutes": "30",
+    "cloud_compute_seconds": null,
+    "estimate_reason": null,
+    "external_cost_usd": null,
+    "handoffs": 0,
+    "interventions": 0,
+    "local_compute_seconds": null,
+    "measurement_mode": "MEASURED",
+    "measurement_source": "synthetic timer fixture",
+    "quality_gate": {
+      "confidence": "high",
+      "estimate_reason": null,
+      "gate": "measured",
+      "measurement_mode": "MEASURED",
+      "source": "synthetic timer fixture"
+    },
+    "quality_notes": null,
+    "returned_human_minutes": "23",
+    "rework_human_minutes": "0",
+    "schema_version": "inneros.htr_record.v1",
+    "task_id": "interop-sample"
+  },
+  "manifest_schema_version": "inneros.evidence_bundle.v1",
+  "metadata": {
+    "fixture": "docs/sample_audit_envelope.json",
+    "evidence_payload_policy": "source_refs_only"
+  },
+  "replay_mode": "audit",
+  "routing": {
+    "cloud_seconds": "0",
+    "cost_usd": "0",
+    "local_seconds": "2.5",
+    "metadata": {},
+    "queue_id": "nats.audit.events",
+    "route_reason": "local-first",
+    "selected_agent": "resource_fabric.local",
+    "selected_model": "local-gemma:27b",
+    "trace_refs": [
+      "trace-sample"
+    ],
+    "worker_id": "worker-sample"
+  },
+  "schema_version": "inneros.audit_envelope.v1"
+}

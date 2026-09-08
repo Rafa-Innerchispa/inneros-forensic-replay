@@ -14,7 +14,7 @@ The core question is:
 
 1. **Audit Replay**: reconstruct the original run from preserved evidence without contacting live external systems.
 2. **Deterministic Replay**: re-run deterministic transforms and policy code against the original captured inputs with network and side effects disabled.
-3. **Counterfactual Replay**: evaluate the same historical evidence with a different model or policy version and compare outcomes.
+3. **Counterfactual Replay**: evaluate the same historical evidence with a labeled alternative policy/model context and keep the result separate from the original audit record.
 
 ## Evidence bundle v1
 
@@ -48,11 +48,27 @@ bundle/
 one entry per artifact. Every artifact is addressed by its SHA-256 digest and is
 verified before replay. Missing or mutated evidence fails closed.
 
+## Audit SDK and HTR
+
+The package also exposes a small audit contract layer for Platform, Service Ops and domain adapters:
+
+- `SourceRef`: points to immutable evidence by logical name, SHA-256, media type, size and path without copying raw payloads.
+- `DecisionEvidence`: records decision id, model identity, policy reference, action references and summary.
+- `RoutingEvidence`: records selected agent/model, route reason, queue/worker and trace references.
+- `HTRRecord`: records Human Time Return with explicit `MEASURED` vs `ESTIMATED` quality gates.
+- `AuditEnvelope`: binds a verified evidence manifest, decision, routing and HTR into one auditable payload.
+
+`HTRRecord` preserves baseline human minutes, assisted active minutes, rework minutes, returned time, interventions, handoffs, local/cloud seconds and external cost when available. Measured HTR requires a measurement source; estimated HTR requires an estimate reason. Negative returned time is surfaced as `negative_return`, not hidden.
+
+`write_audit_jsonl(...)` is an explicit JSONL fallback. Parquet/DuckDB can be added by a hosting runtime when available, but this core package does not pretend to emit Parquet without that dependency.
+
+See `docs/platform_service_ops_integration.md` for the integration contract.
+
 ## Architecture direction
 
 Phase 1 keeps the implementation deliberately small:
 
-`Raw Capture -> Content-Addressed Evidence Bundle -> Manifest -> Replay API`
+`Raw Capture -> Content-Addressed Evidence Bundle -> Manifest -> Audit Envelope -> Replay API`
 
 Core APIs:
 
@@ -63,12 +79,16 @@ Core APIs:
 - `capture_tabular_dataset(...)` stores large row-oriented evidence as Parquet
   when `pyarrow` is available, otherwise as truthful JSONL fallback.
 - `EvidenceBundleReader.verify()` checks the manifest and all artifact hashes.
+- `build_audit_envelope(...)` references verified evidence and attaches decision,
+  routing and HTR records without copying raw payloads.
 - `AuditReplayer.load()` returns preserved evidence only; it never contacts
   live systems.
 - `DeterministicReplayer.run_transform(...)` verifies evidence and runs a local
   deterministic transform with outbound network calls blocked.
 - `CounterfactualReplayer.compare(...)` evaluates a new model/policy descriptor
   against the same historical evidence and preserves the original output.
+- `CounterfactualReplayer.run_counterfactual(...)` requires a label and keeps
+  what-if results separate from the original audit record.
 
 Planned integrations are additive rather than mandatory:
 
@@ -88,10 +108,11 @@ Planned integrations are additive rather than mandatory:
 - Hash evidence at ingestion and verify it before replay.
 - Separate `observed_at`, `captured_at`, and `processed_at` timestamps.
 - Keep domain adapters outside the replay core.
+- Store source-of-truth references in audit envelopes instead of duplicating raw evidence.
 
 ## First target
 
-The first adapter will be **InnerOS Alpha / Alpaca** so a historical recommendation can be audited against the exact market snapshot, option-chain evidence, portfolio state, model output, and risk policy that produced it.
+The first adapter is **InnerOS Alpha / Alpaca** so a historical recommendation can be audited against the exact market snapshot, option-chain evidence, portfolio state, model output, and risk policy that produced it.
 
 See `docs/alpaca_adapter_contract.md` for the capture contract. The replay core
 does not import Alpaca clients or credentials; adapters must capture raw payloads
@@ -121,9 +142,10 @@ replay.
 python -m unittest discover -s tests
 ```
 
-The test suite covers SHA verification, missing-evidence fail-closed behavior
-and replay execution with network disabled.
+The test suite covers SHA verification, missing-evidence fail-closed behavior,
+replay execution with network disabled, HTR quality gates, JSONL fallback and a
+capture -> verify -> audit -> HTR -> replay smoke path.
 
 ## Status
 
-Bootstrap started September 2026. The repository is intentionally small while the evidence contract is stabilized before adding infrastructure dependencies.
+Bootstrap started September 2026. The repository remains intentionally small while the evidence contract is stabilized before adding infrastructure dependencies.

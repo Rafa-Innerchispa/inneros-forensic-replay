@@ -5,7 +5,7 @@ import urllib.request
 from contextlib import contextmanager
 from typing import Any, Callable
 
-from .bundle import EvidenceBundleReader, EvidenceManifest, ReplayNetworkBlocked
+from .bundle import EvidenceBundleReader, EvidenceError, EvidenceManifest, ReplayNetworkBlocked
 
 
 class AuditReplayer:
@@ -54,7 +54,7 @@ class DeterministicReplayer:
 
 
 class CounterfactualReplayer:
-    """Evaluates new policy/model descriptors against the original evidence."""
+    """Evaluates labeled policy/model alternatives against original evidence."""
 
     def __init__(self, reader: EvidenceBundleReader):
         self.reader = reader
@@ -89,6 +89,34 @@ class CounterfactualReplayer:
             "network_disabled": True,
         }
 
+    def run_counterfactual(
+        self,
+        transform: Callable[[dict[str, Any], EvidenceManifest, dict[str, Any]], Any],
+        *,
+        required_artifacts: list[str],
+        counterfactual: dict[str, Any],
+    ) -> dict[str, Any]:
+        if not counterfactual.get("label"):
+            raise EvidenceError("counterfactual replay requires a label")
+        manifest = self.reader.verify()
+        required = self.reader.require(required_artifacts)
+        evidence = {
+            name: self.reader.artifact_json(record)
+            if record.media_type == "application/json"
+            else self.reader.artifact_bytes(record)
+            for name, record in required.items()
+        }
+        with network_disabled():
+            result = transform(evidence, manifest, dict(counterfactual))
+        return {
+            "mode": "counterfactual",
+            "correlation_id": manifest.correlation_id,
+            "counterfactual": dict(counterfactual),
+            "result": result,
+            "side_effect_free": True,
+            "network_disabled": True,
+        }
+
 
 @contextmanager
 def network_disabled():
@@ -107,4 +135,4 @@ def network_disabled():
     finally:
         socket.create_connection = original_create_connection  # type: ignore[assignment]
         socket.socket.connect = original_socket_connect  # type: ignore[assignment]
-        urllib.request.urlopen = original_urlopen  # type: ignore[assignment]
+        urllib.request.urlopen = original_urlopen
