@@ -89,7 +89,23 @@ class RoutingEvidence:
     cloud_seconds: Decimal | None = None
     cost_usd: Decimal | None = None
     trace_refs: tuple[str, ...] = ()
+    provider_id: str | None = None
+    provider_kind: str | None = None
+    local_cloud: str | None = None
+    reason_codes: tuple[str, ...] = ()
+    fallback: bool | None = None
+    policy: str | None = None
+    policy_version: str | None = None
+    latency_ms: Decimal | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "local_seconds", optional_decimal(self.local_seconds))
+        object.__setattr__(self, "cloud_seconds", optional_decimal(self.cloud_seconds))
+        object.__setattr__(self, "cost_usd", optional_decimal(self.cost_usd))
+        object.__setattr__(self, "latency_ms", optional_decimal(self.latency_ms))
+        if self.local_cloud is not None and self.local_cloud not in ("local", "cloud", "hybrid", "unknown"):
+            raise EvidenceError(f"unsupported routing local_cloud value: {self.local_cloud!r}")
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -102,6 +118,14 @@ class RoutingEvidence:
             "cloud_seconds": decimal_to_str(self.cloud_seconds),
             "cost_usd": decimal_to_str(self.cost_usd),
             "trace_refs": list(self.trace_refs),
+            "provider_id": self.provider_id,
+            "provider_kind": self.provider_kind,
+            "local_cloud": self.local_cloud,
+            "reason_codes": list(self.reason_codes),
+            "fallback": self.fallback,
+            "policy": self.policy,
+            "policy_version": self.policy_version,
+            "latency_ms": decimal_to_str(self.latency_ms),
             "metadata": self.metadata,
         }
 
@@ -235,6 +259,10 @@ class AuditEnvelope:
     routing: RoutingEvidence
     htr: HTRRecord
     replay_mode: ReplayMode = "audit"
+    tenant_id: str | None = None
+    workflow_id: str | None = None
+    trace_id: str | None = None
+    task_class: str | None = None
     created_at: str = field(default_factory=utc_now_iso)
     schema_version: str = AUDIT_SCHEMA_VERSION
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -243,6 +271,10 @@ class AuditEnvelope:
         return {
             "schema_version": self.schema_version,
             "correlation_id": self.correlation_id,
+            "tenant_id": self.tenant_id,
+            "workflow_id": self.workflow_id,
+            "trace_id": self.trace_id,
+            "task_class": self.task_class,
             "created_at": self.created_at,
             "manifest_schema_version": self.manifest_schema_version,
             "evidence_manifest_sha256": self.evidence_manifest_sha256,
@@ -266,6 +298,10 @@ def build_audit_envelope(
     htr: HTRRecord,
     replay_mode: ReplayMode = "audit",
     metadata: dict[str, Any] | None = None,
+    tenant_id: str | None = None,
+    workflow_id: str | None = None,
+    trace_id: str | None = None,
+    task_class: str | None = None,
 ) -> AuditEnvelope:
     if replay_mode not in ("audit", "deterministic", "counterfactual"):
         raise EvidenceError(f"unsupported replay mode: {replay_mode!r}")
@@ -279,6 +315,10 @@ def build_audit_envelope(
         routing=routing,
         htr=htr,
         replay_mode=replay_mode,
+        tenant_id=tenant_id,
+        workflow_id=workflow_id,
+        trace_id=trace_id,
+        task_class=task_class,
         metadata=dict(metadata or {}),
     )
 

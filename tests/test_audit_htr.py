@@ -98,6 +98,14 @@ class AuditHTRTests(unittest.TestCase):
                     route_reason="local-first audit lane",
                     queue_id="nats.audit",
                     worker_id="worker-a",
+                    provider_id="local-amd-5",
+                    provider_kind="local_node",
+                    local_cloud="local",
+                    reason_codes=("local_first", "capacity_available"),
+                    fallback=False,
+                    policy="resource_fabric_v1",
+                    policy_version="2026-09-09",
+                    latency_ms=Decimal("42"),
                 ),
                 htr=HTRRecord(
                     task_id="ops-audit",
@@ -106,12 +114,26 @@ class AuditHTRTests(unittest.TestCase):
                     assisted_active_human_minutes=8,
                     measurement_source="timer-log",
                 ),
-                metadata={"artifact_count": len(refs)},
+                metadata={"artifact_count": len(refs), "synthetic": True, "kpi_eligible": False},
+                tenant_id="tenant-a",
+                workflow_id="workflow-a",
+                trace_id="trace-a",
+                task_class="audit-test",
             )
 
             payload = envelope.to_dict()
             self.assertIsInstance(envelope, AuditEnvelope)
             self.assertEqual(payload["schema_version"], "inneros.audit_envelope.v1")
+            self.assertEqual(payload["tenant_id"], "tenant-a")
+            self.assertEqual(payload["workflow_id"], "workflow-a")
+            self.assertEqual(payload["trace_id"], "trace-a")
+            self.assertEqual(payload["task_class"], "audit-test")
+            self.assertEqual(payload["routing"]["provider_id"], "local-amd-5")
+            self.assertEqual(payload["routing"]["reason_codes"], ["local_first", "capacity_available"])
+            self.assertEqual(payload["routing"]["fallback"], False)
+            self.assertEqual(payload["routing"]["latency_ms"], "42")
+            self.assertEqual(payload["metadata"]["synthetic"], True)
+            self.assertEqual(payload["metadata"]["kpi_eligible"], False)
             self.assertEqual(payload["evidence_refs"][0]["logical_name"], "alpaca.latest_trade.raw")
             self.assertNotIn("sensitive raw data", json.dumps(payload))
             self.assertEqual(len(envelope.canonical_sha256()), 64)
@@ -218,12 +240,24 @@ class AuditHTRTests(unittest.TestCase):
         self.assertEqual(schema["properties"]["schema_version"]["const"], "inneros.audit_envelope.v1")
         self.assertEqual(sample["schema_version"], "inneros.audit_envelope.v1")
         self.assertEqual(sample["manifest_schema_version"], "inneros.evidence_bundle.v1")
+        for field in ("tenant_id", "workflow_id", "trace_id", "task_class"):
+            self.assertIn(field, schema["properties"])
+            self.assertIn(field, sample)
+        self.assertEqual(sample["metadata"]["synthetic"], True)
+        self.assertEqual(sample["metadata"]["kpi_eligible"], False)
         self.assertRegex(sample["evidence_manifest_sha256"], r"^[a-f0-9]{64}$")
         self.assertIn("evidence_refs", sample)
         self.assertNotIn("evidenceRefs", sample)
         self.assertNotIn("raw_payload", json.dumps(sample))
         self.assertEqual(sample["htr"]["measurement_mode"], "MEASURED")
         self.assertEqual(sample["htr"]["measurement_source"], "synthetic timer fixture")
+        self.assertEqual(sample["routing"]["provider_id"], "local-amd-5")
+        self.assertEqual(sample["routing"]["provider_kind"], "local_node")
+        self.assertEqual(sample["routing"]["local_cloud"], "local")
+        self.assertEqual(sample["routing"]["reason_codes"], ["local_first", "capacity_available"])
+        self.assertEqual(sample["routing"]["fallback"], False)
+        self.assertEqual(sample["routing"]["policy"], "resource_fabric_v1")
+        self.assertEqual(sample["routing"]["latency_ms"], "2500")
 
     def test_counterfactual_replay_blocks_network_and_requires_label(self) -> None:
         with self._tmpdir() as tmp_path:
@@ -245,6 +279,15 @@ class AuditHTRTests(unittest.TestCase):
                     counterfactual={"label": "network-check"},
                 )
             self.assertEqual(type(caught.exception).__name__, "ReplayNetworkBlocked")
+
+    def test_routing_evidence_rejects_unknown_local_cloud_boundary(self) -> None:
+        with self.assertRaisesRegex(EvidenceError, "local_cloud"):
+            RoutingEvidence(
+                selected_agent="audit-worker",
+                selected_model="local-gemma:27b",
+                route_reason="test",
+                local_cloud="edge",
+            )
 
     @staticmethod
     def _tmpdir():

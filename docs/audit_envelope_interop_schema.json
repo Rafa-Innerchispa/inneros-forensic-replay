@@ -166,6 +166,27 @@
             "null"
           ]
         },
+        "fallback": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "latency_ms": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "local_cloud": {
+          "enum": [
+            "local",
+            "cloud",
+            "hybrid",
+            "unknown",
+            null
+          ]
+        },
         "local_seconds": {
           "type": [
             "string",
@@ -175,11 +196,41 @@
         "metadata": {
           "type": "object"
         },
+        "policy": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "policy_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "provider_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "provider_kind": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "queue_id": {
           "type": [
             "string",
             "null"
           ]
+        },
+        "reason_codes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "route_reason": {
           "type": "string"
@@ -213,7 +264,15 @@
         "cloud_seconds",
         "cost_usd",
         "trace_refs",
-        "metadata"
+        "metadata",
+        "provider_id",
+        "provider_kind",
+        "local_cloud",
+        "reason_codes",
+        "fallback",
+        "policy",
+        "policy_version",
+        "latency_ms"
       ],
       "type": "object"
     },
@@ -300,6 +359,14 @@
       "const": "inneros.evidence_bundle.v1"
     },
     "metadata": {
+      "properties": {
+        "kpi_eligible": {
+          "type": "boolean"
+        },
+        "synthetic": {
+          "type": "boolean"
+        }
+      },
       "type": "object"
     },
     "replay_mode": {
@@ -314,6 +381,30 @@
     },
     "schema_version": {
       "const": "inneros.audit_envelope.v1"
+    },
+    "task_class": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "tenant_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "trace_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "workflow_id": {
+      "type": [
+        "string",
+        "null"
+      ]
     }
   },
   "required": [

@@ -61,16 +61,30 @@
   },
   "manifest_schema_version": "inneros.evidence_bundle.v1",
   "metadata": {
+    "evidence_payload_policy": "source_refs_only",
     "fixture": "docs/sample_audit_envelope.json",
-    "evidence_payload_policy": "source_refs_only"
+    "kpi_eligible": false,
+    "measurement_boundary": "Synthetic fixture. Excluded from production verified HTR and KPI totals.",
+    "synthetic": true
   },
   "replay_mode": "audit",
   "routing": {
     "cloud_seconds": "0",
     "cost_usd": "0",
+    "fallback": false,
+    "latency_ms": "2500",
+    "local_cloud": "local",
     "local_seconds": "2.5",
     "metadata": {},
+    "policy": "resource_fabric_v1",
+    "policy_version": "2026-09-09",
+    "provider_id": "local-amd-5",
+    "provider_kind": "local_node",
     "queue_id": "nats.audit.events",
+    "reason_codes": [
+      "local_first",
+      "capacity_available"
+    ],
     "route_reason": "local-first",
     "selected_agent": "resource_fabric.local",
     "selected_model": "local-gemma:27b",
@@ -79,5 +93,9 @@
     ],
     "worker_id": "worker-sample"
   },
-  "schema_version": "inneros.audit_envelope.v1"
+  "schema_version": "inneros.audit_envelope.v1",
+  "task_class": "service_operations_demo",
+  "tenant_id": "demo-pcdoctor-service-co",
+  "trace_id": "trace-sample",
+  "workflow_id": "svc-demo-001"
 }
