@@ -1,5 +1,16 @@
 # InnerOS Forensic Replay
 
+<!-- INNEROS-NARRATIVE:START -->
+> **InnerOS role:** Core Capability  
+> **Lifecycle:** Active research and engineering  
+> **Lineage:** Reusable InnerOS evidence, audit, replay, and counterfactual-analysis layer.
+>
+> Forensic Replay preserves what an agent actually saw and did so decisions can be verified, reconstructed, and compared later without rewriting history.
+>
+> **InnerOS principle:** hackathons are validation environments. Reusable capabilities are extracted into maintained products and platform layers rather than treated as disconnected one-off projects.
+<!-- INNEROS-NARRATIVE:END -->
+
+
 A reusable forensic evidence and replay layer for governed AI agents.
 
 ## Purpose
